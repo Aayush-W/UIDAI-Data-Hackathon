@@ -104,7 +104,7 @@ The system is **auditable, reproducible, and scalable**.
 
 UIDAI-Data-Hackathon/
 │
-├── README.md                        ← Main project overview (already exists)
+├── README.md                      
 │
 ├── Datasets/
 │   │
@@ -113,7 +113,7 @@ UIDAI-Data-Hackathon/
 │   │   ├── api_data_aadhar_biometric.zip
 │   │   ├── api_data_aadhar_demographic.zip
 │   │   ├── data.zip
-│   │   └── README.md                ← explains raw datasets
+│   │   └── README.md               
 │   │
 │   └── Processed Data/
 │       │
@@ -138,7 +138,7 @@ UIDAI-Data-Hackathon/
 │       │   ├── Early_Warning_Youth_Instability.csv
 │       │   └── README.md
 │       │
-│       └── README.md                ← overview of all processed datasets
+│       └── README.md              
 │
 ├── Documentation/
 │   ├── Biometrics_Methodology_Documentation.docx
