@@ -102,21 +102,79 @@ The system is **auditable, reproducible, and scalable**.
 
 ## 📂 Repository Structure
 
-```text
-├── documentation/
-│   ├── Aadhaar_Lifecycle_Risk_Dashboard_Final_Documentation.docx
-│   ├── Metric_Interpretation_Appendix.docx
+UIDAI-Data-Hackathon/
+│
+├── README.md                        ← Main project overview (already exists)
+│
+├── Datasets/
+│   │
+│   ├── Raw Data/
+│   │   ├── api_data_aadhar_enrolment.zip
+│   │   ├── api_data_aadhar_biometric.zip
+│   │   ├── api_data_aadhar_demographic.zip
+│   │   ├── data.zip
+│   │   └── README.md                ← explains raw datasets
+│   │
+│   └── Processed Data/
+│       │
+│       ├── Enrollment/
+│       │   ├── enrolment_0_5.xlsx
+│       │   ├── enrolment_5_10.xlsx
+│       │   ├── enrolment_10_plus.xlsx
+│       │   ├── Aadhaar_Analysis_Final_Report_merged.zip
+│       │   └── README.md
+│       │
+│       ├── Biometric/
+│       │   ├── uidai_biometric_flagged.csv
+│       │   ├── uidai_biometric_monthly_aggregated.csv
+│       │   ├── uidai_monthly_master_9_columns.csv
+│       │   └── README.md
+│       │
+│       ├── Demographic/
+│       │   ├── Administrative_Friction_Hotspots.csv
+│       │   ├── Persistent_Friction_Districts.csv
+│       │   ├── Migration_Hotspots.csv
+│       │   ├── Seasonal_Migration_Signal.csv
+│       │   ├── Early_Warning_Youth_Instability.csv
+│       │   └── README.md
+│       │
+│       └── README.md                ← overview of all processed datasets
+│
+├── Documentation/
 │   ├── Biometrics_Methodology_Documentation.docx
-│   └── Operational_Insights_Documentation.docx
+│   ├── Demographics_Methodology_Documentation.docx
+│   ├── Enrollment_Methodology_Documentation.docx
+│   └── UIDAI_Aadhaar_Lifecycle_Risk_Dashboard_with_Metric_Appendix.pdf
 │
-├── datasets/
-│   ├── Final_All_Metrics_Data.xlsx
-│   ├── metrics_unified.csv
-│   └── map_export_table.csv
+├── Visuals/
+│   │
+│   ├── Heatmaps/
+│   │   ├── future_risk_score.jpeg
+│   │   ├── lifecycle_risk_level.jpeg
+│   │   ├── intervention_priority.jpeg
+│   │   ├── primary_failure_domain.jpeg
+│   │   └── README.md
+│   │
+│   ├── PowerBI/
+│   │   ├── dashboards/
+│   │   │   ├── UIDAI_Enrollments.pbix
+│   │   │   ├── UIDAI_Demographics.pbix
+│   │   │   ├── UIDAI_Biometrics.pbix
+│   │   │   └── UIDAI_Final_Dashboard.pbix
+│   │   │
+│   │   ├── screenshots/
+│   │   │   ├── district_enrollment_profile.jpeg
+│   │   │   ├── monthly_biometric_profile.jpeg
+│   │   │   └── state_demographic_profile.jpeg
+│   │   │
+│   │   └── README.md
+│   │
+│   └── Tableau/
+│       ├── UIDAI_Dashboard.twb
+│       └── README.md
 │
-├── visuals/
-│   ├── dashboard_screenshots/
-│   └── architecture_diagrams/
-│
-├── README.md
-└── LICENSE
+└── docs/
+    ├── metric_definitions.md
+    ├── methodology.md
+    └── risk_scoring_framework.md
+
