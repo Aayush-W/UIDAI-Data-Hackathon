@@ -86,5 +86,4 @@ These heatmaps allow UIDAI to:
 
 
 
-### ✔ End of Heatmaps Documentation
 
