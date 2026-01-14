@@ -10,7 +10,7 @@ These heatmaps serve as the **strategic and executive visualization layer**, ena
 
 ### 🔴 `future_risk_score.jpeg`
 **Future Risk Score Heatmap**
-
+https://public.tableau.com/app/profile/aayush.w8472/viz/UIDAIDashboard/FutureRiskScore?publish=yes
 - Displays district-wise **composite future enrolment risk**
 - Higher intensity indicates higher likelihood of future exclusion or system stress
 - Derived from lifecycle imbalance, biometric risk, saturation, and trend signals
@@ -22,7 +22,7 @@ Early-warning detection and district prioritization
 
 ### 🚨 `intervention_priority.jpeg`
 **Intervention Priority Heatmap**
-
+https://public.tableau.com/app/profile/aayush.w8472/viz/UIDAIDashboard/InterventionPriority?publish=yes
 - Categorizes districts by recommended action urgency:
   - Immediate Intervention
   - Monitor Closely
@@ -36,7 +36,7 @@ Resource allocation and intervention planning
 
 ### ⚠️ `lifecycle_risk_level.jpeg`
 **Lifecycle Risk Level Heatmap**
-
+https://public.tableau.com/app/profile/aayush.w8472/viz/UIDAIDashboard/LifecycleRiskLevel?publish=yes
 - Categorical representation of enrolment risk:
   - Healthy
   - Watchlist
@@ -50,7 +50,7 @@ Senior leadership review and reporting
 
 ### 🧩 `primary_failure_domain.jpeg`
 **Primary Failure Domain Heatmap**
-
+https://public.tableau.com/app/profile/aayush.w8472/viz/UIDAIDashboard/PrimaryFailureDomain?publish=yes
 - Highlights the **dominant root cause of risk** in each district:
   - Late Enrolment
   - Silent Exclusion
