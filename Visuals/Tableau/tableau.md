@@ -1,46 +1,91 @@
-#  Tableau Geographic Visualizations
+Here is your **updated GitHub-ready README** for the Tableau folder with the two newly added files integrated clearly.
 
-This folder contains **Tableau workbooks and visual outputs** focused on **geographic risk intelligence** for Aadhaar enrolment across India.
+---
 
-Tableau is used specifically for **spatial analysis and storytelling**, complementing Power BI dashboards.
+# 📊 Tableau Geographic Visualizations
 
+This folder contains **Tableau workbooks and visual outputs** built for **geographic risk intelligence of Aadhaar enrolment systems across India**.
 
-##  Visualizations Included
+These dashboards provide the **spatial storytelling layer** of the project, transforming raw UIDAI lifecycle metrics into actionable district-level insights.
 
-### 1️⃣ India District Risk Heatmap
-- Choropleth map of India
-- Colored by **Future Risk Score**
-- Enables identification of high-risk geographic clusters
+---
 
-### 2️⃣ Lifecycle Risk Level Map
-- Categorical risk classification
-- Highlights Healthy, Watchlist, and Critical districts
+## 🗺 Visualizations Included
 
-### 3️⃣ Primary Failure Domain Map
-- Shows dominant cause of risk by geography
-- Enables targeted intervention planning
+### 1️⃣ India District **Future Risk Score** Heatmap
+
+* Choropleth map of India
+* Colored by **Future Risk Score**
+* Integrates lifecycle imbalance, biometric risk, maintenance overload, and trend collapse
+* Enables early detection of emerging exclusion zones
+
+---
+
+### 2️⃣ **Lifecycle Risk Level** Map
+
+* Categorical risk classification:
+
+  * Healthy
+  * Watchlist
+  * Critical
+* Separates slow-moving backlogs from structurally broken systems
+
+---
+
+### 3️⃣ **Primary Failure Domain** Map
+
+* Displays dominant failure cause per district:
+
+  * Late Enrolment
+  * Silent Exclusion
+  * Biometric Stress
+  * Saturation Stress
+  * Growth Collapse
+  * **Black Hole Friction** – instant backend rejection
+  * **Maintenance Debt Collapse** – update overload choking infrastructure
+* Drives root-cause based intervention design
+
+---
+
+### 4️⃣ **Intervention Priority** Map 🆕
+
+* Classifies districts into:
+
+  * Immediate Intervention
+  * Monitor Closely
+  * Routine Monitoring
+* Converts analytical risk into **field-ready operational signals**
+
+---
+
+### 5️⃣ **Future Risk Trend Explorer** 🆕
+
+* Temporal Tableau view tracking district-wise movement across:
+
+  * Friction
+  * Delay
+  * Efficiency collapse
+* Highlights districts transitioning from *Watchlist → Critical*
 
 ---
 
 ## 🎯 Purpose of Geographic Mapping
 
-The maps allow UIDAI to:
-- Identify **where** enrolment risks are concentrated
-- Distinguish persistent vs emerging hotspots
-- Align operational interventions geographically
+These maps enable UIDAI to:
+
+* Identify **where** enrolment infrastructure is failing
+* Understand **why** failure is occurring (protocol vs capacity vs biometric)
+* Distinguish **persistent collapse zones** from **emerging risk districts**
+* Deploy **precision interventions instead of blanket policies**
 
 ---
 
 ## 🧠 Design Choices
 
-- District-level granularity wherever possible
-- Intuitive Red–Amber–Green color logic
-- Hover tooltips for metric interpretation
-- State → District drill-down support
-
-Screenshots are provided for easy review without Tableau Desktop.
+* District-level granularity wherever available
+* Red–Amber–Green executive logic
+* Hover tooltips for metric interpretation
+* State → District drill-down support
+* Screenshots included for offline review without Tableau Desktop
 
 ---
-
-
-
