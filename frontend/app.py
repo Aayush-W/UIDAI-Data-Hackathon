@@ -395,9 +395,9 @@ def load_data():
     # Robustly find the dataset file relative to this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
     paths_to_check = [
-        os.path.join(base_dir, "datasets", "UIDAI_Dashboard_Dataset.csv"),      # frontend/datasets
-        os.path.join(base_dir, "..", "datasets", "UIDAI_Dashboard_Dataset.csv"), # root/datasets
-        os.path.join(base_dir, "..", "backend", "UIDAI_Dashboard_Dataset.csv")   # root/backend
+        os.path.join(base_dir, "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),      # frontend/datasets
+        os.path.join(base_dir, "..", "datasets", "UIDAI_Final_Dashboard_Dataset.csv"), # root/datasets
+        os.path.join(base_dir, "..", "backend", "UIDAI_Final_Dashboard_Dataset.csv")   # root/backend
     ]
     
     for path in paths_to_check:
