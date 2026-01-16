@@ -9,10 +9,18 @@ import streamlit.components.v1 as components
 from datetime import datetime
 from dotenv import load_dotenv
 
+st.set_page_config(
+    page_title="Aadhaar Lifecycle Risk Dashboard",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 # Load env and set API URL
 # load_dotenv()
 # API_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
 
+# Load env and set API URL
+load_dotenv()
+API_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
 # Page config
 st.set_page_config(
     page_title="UIDAI Risk Intelligence",
@@ -399,15 +407,44 @@ st.markdown("""
 
 def debug_panel():
     """Display debug info and quick endpoint pings."""
+    st.sidebar.markdown("---")
+    st.sidebar.header("🔧 Debug Panel")
+    st.sidebar.caption(f"API: {API_URL}")
     pass
+
+    if st.sidebar.button("🔍 Ping API Root"):
+        try:
+            r = requests.get(f"{API_URL}/", timeout=3)
+            st.sidebar.success(f"✅ Status: {r.status_code}")
+            st.sidebar.json(r.json())
+        except Exception as e:
+            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
+
+    if st.sidebar.button("📊 Ping Summary"):
+        try:
+            r = requests.get(f"{API_URL}/api/summary", timeout=5)
+            st.sidebar.success(f"✅ Status: {r.status_code}")
+            if r.status_code == 200:
+                st.sidebar.json(r.json())
+        except Exception as e:
+            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
 
 
 # API CLIENT
 class APIClient:
     @staticmethod
+    def get_summary(state="All India"):
     @st.cache_data
     def load_local_data():
         try:
+            response = requests.get(f"{API_URL}/api/summary", params={"state": state}, timeout=5)
+            if response.status_code == 200:
+                st.session_state['last_api_error'] = None
+                return response.json()
+            else:
+                err = f"Summary API error: HTTP {response.status_code}"
+                st.session_state['last_api_error'] = err
+                return None
             # Attempt to locate the CSV file (root or parent directory)
             csv_file = "UIDAI_Final_Dashboard_Dataset.csv"
             if not os.path.exists(csv_file):
@@ -455,10 +492,13 @@ class APIClient:
             
             return df
         except Exception as e:
+            st.session_state['last_api_error'] = str(e)
+            return None
             st.error(f"Data processing error: {e}")
             return pd.DataFrame()
 
     @staticmethod
+    @st.cache_data(ttl=600)
     def get_summary(state="All India"):
         df = APIClient.load_local_data()
         if df.empty: return None
@@ -481,6 +521,19 @@ class APIClient:
 
     @staticmethod
     def get_data(state="All India"):
+        try:
+            response = requests.get(f"{API_URL}/api/dataset", params={"state": state}, timeout=10)
+            if response.status_code == 200:
+                st.session_state['last_api_error'] = None
+                data = response.json()
+                return pd.DataFrame(data)
+            else:
+                err = f"Data API error: HTTP {response.status_code}"
+                st.session_state['last_api_error'] = err
+                return pd.DataFrame()
+        except Exception as e:
+            st.session_state['last_api_error'] = str(e)
+            return pd.DataFrame()
         df = APIClient.load_local_data()
         if df.empty: return pd.DataFrame()
         if state != "All India": 
@@ -834,6 +887,39 @@ def page_executive(df, metrics):
 
     with g2:
         # Fetch intervention data to show priority breakdown
+        try:
+            r = requests.get(f"{API_URL}/api/interventions", timeout=5)
+            if r.status_code == 200:
+                idf = pd.DataFrame(r.json())
+                # Filter for selected states
+                idf_filtered = idf[idf['State'].isin([s1, s2])]
+                
+                if not idf_filtered.empty:
+                    # Group by State and Priority
+                    prio_counts = idf_filtered.groupby(['State', 'Intervention_Priority']).size().reset_index(name='Count')
+                    
+                    fig_bar = px.bar(
+                        prio_counts,
+                        x='State',
+                        y='Count',
+                        color='Intervention_Priority',
+                        barmode='group',
+                        title="Intervention Priorities",
+                        color_discrete_map={'High': '#dc2626', 'Medium': '#f59e0b', 'Low': '#16a34a'}
+                    )
+                    fig_bar.update_layout(
+                        height=380, 
+                        plot_bgcolor="rgba(0,0,0,0)", 
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        font=dict(color="#0f172a")
+                    )
+                    st.plotly_chart(fig_bar, use_container_width=True)
+                else:
+                    st.info("No intervention data available for selected states.")
+            else:
+                st.warning("Could not fetch intervention data.")
+        except Exception:
+            st.warning("Intervention API unavailable.")
         st.info("Intervention data unavailable in offline mode.")
 
 def page_tableau_integration():
@@ -1037,6 +1123,11 @@ def page_district_deep_dive(df):
         </div>
         """, unsafe_allow_html=True)
             # Fetch intervention metrics for this district (if available)
+        try:
+                r_im = requests.get(f"{API_URL}/api/interventions", timeout=5)
+                im_df = pd.DataFrame(r_im.json()) if r_im.status_code == 200 else pd.DataFrame()
+        except Exception:
+                im_df = pd.DataFrame()
         im_df = pd.DataFrame()
 
         im_record = None
