@@ -397,12 +397,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-@st.cache_data
 def load_data():
     # Use absolute path relative to this script to ensure file is found regardless of CWD
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "backend", "UIDAI_Dashboard_Dataset.csv")
     return pd.read_csv(file_path)
-
 # COMPONENT LIBRARY
 def render_header():
     st.markdown("""
