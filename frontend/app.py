@@ -395,9 +395,12 @@ def load_data():
     # Robustly find the dataset file relative to this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
     paths_to_check = [
-        os.path.join(base_dir, "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),      # frontend/datasets
-        os.path.join(base_dir, "..", "datasets", "UIDAI_Final_Dashboard_Dataset.csv"), # root/datasets
-        os.path.join(base_dir, "..", "backend", "UIDAI_Final_Dashboard_Dataset.csv")   # root/backend
+        os.path.join(base_dir, "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "datasets", "UIDAI_FInal_Dashboard_Dataset.csv"),      # Handle typo
+        os.path.join(base_dir, "..", "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "datasets", "UIDAI_FInal_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "backend", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "backend", "UIDAI_FInal_Dashboard_Dataset.csv")
     ]
     
     for path in paths_to_check:
@@ -413,12 +416,20 @@ def load_data():
                 for col in required_columns:
                     if col not in df.columns:
                         df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
+                
+                # Fill NaNs for numeric columns to ensure stability
+                numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
+                              'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
+                for col in numeric_cols:
+                    if col in df.columns:
+                        df[col] = df[col].fillna(0)
+                        
                 return df
             except Exception as e:
                 st.error(f"Error reading dataset: {e}")
                 st.stop()
             
-    st.error("Dataset file not found. Please ensure 'UIDAI_Dashboard_Dataset.csv' exists in 'datasets' or 'backend' folder.")
+    st.error("Dataset file not found. Please ensure 'UIDAI_Final_Dashboard_Dataset.csv' (or 'UIDAI_FInal_Dashboard_Dataset.csv') exists in 'datasets' or 'backend' folder.")
     st.stop()
 # COMPONENT LIBRARY
 def render_header():
@@ -977,9 +988,9 @@ def page_district_deep_dive(df):
         im_record = None
         matches = pd.DataFrame()
         if not im_df.empty:
-                matches = im_df[im_df['District'].str.lower() == selected_dist.lower()]
+            matches = im_df[im_df['District'].str.lower() == selected_dist.lower()]
         if not matches.empty:
-                    im_record = matches.iloc[0].to_dict()
+            im_record = matches.iloc[0].to_dict()
 
             # Show intervention snapshot
         if im_record:
