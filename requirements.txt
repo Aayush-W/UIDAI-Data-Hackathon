@@ -5,7 +5,7 @@ plotly
 openpyxl
 matplotlib
 seaborn
-fastapi
-uvicorn
+
+
 python-dotenv
 requests
