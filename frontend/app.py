@@ -399,8 +399,7 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    return pd.read_excel("datasets/Final_All_Metrics_Data.xlsx")
-
+    return pd.read_csv("backend/UIDAI_Dashboard_Dataset.csv")
 
 # COMPONENT LIBRARY
 def render_header():
