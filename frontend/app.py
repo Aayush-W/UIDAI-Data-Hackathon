@@ -9,15 +9,10 @@ import streamlit.components.v1 as components
 from datetime import datetime
 from dotenv import load_dotenv
 
-st.set_page_config(
-    page_title="Aadhaar Lifecycle Risk Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Load env and set API URL
-load_dotenv()
-API_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
+# load_dotenv()
+# API_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
+
 # Page config
 st.set_page_config(
     page_title="UIDAI Risk Intelligence",
@@ -404,61 +399,93 @@ st.markdown("""
 
 def debug_panel():
     """Display debug info and quick endpoint pings."""
-    st.sidebar.markdown("---")
-    st.sidebar.header("🔧 Debug Panel")
-    st.sidebar.caption(f"API: {API_URL}")
-
-    if st.sidebar.button("🔍 Ping API Root"):
-        try:
-            r = requests.get(f"{API_URL}/", timeout=3)
-            st.sidebar.success(f"✅ Status: {r.status_code}")
-            st.sidebar.json(r.json())
-        except Exception as e:
-            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
-
-    if st.sidebar.button("📊 Ping Summary"):
-        try:
-            r = requests.get(f"{API_URL}/api/summary", timeout=5)
-            st.sidebar.success(f"✅ Status: {r.status_code}")
-            if r.status_code == 200:
-                st.sidebar.json(r.json())
-        except Exception as e:
-            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
+    pass
 
 
 # API CLIENT
 class APIClient:
     @staticmethod
-    def get_summary(state="All India"):
+    @st.cache_data
+    def load_local_data():
         try:
-            response = requests.get(f"{API_URL}/api/summary", params={"state": state}, timeout=5)
-            if response.status_code == 200:
-                st.session_state['last_api_error'] = None
-                return response.json()
-            else:
-                err = f"Summary API error: HTTP {response.status_code}"
-                st.session_state['last_api_error'] = err
-                return None
+            # Attempt to locate the CSV file (root or parent directory)
+            csv_file = "UIDAI_Final_Dashboard_Dataset.csv"
+            if not os.path.exists(csv_file):
+                csv_file = os.path.join("..", "UIDAI_Final_Dashboard_Dataset.csv")
+            
+            if not os.path.exists(csv_file):
+                return pd.DataFrame()
+
+            df = pd.read_csv(csv_file)
+            
+            # --- Logic ported from backend/main.py ---
+            column_mapping = {
+                'district': 'District',
+                'state': 'State',
+                'enrol_total_enrolments': 'Total_Enrolment',
+                'bio_total_bio_updates': 'Pending_Biometrics', 
+                'bio_FUTURE_SURGE_RISK': 'Flag_Future_Surge_Risk',
+                'bio_INFRA_STRESS': 'Flag_Infra_Stress',
+                'bio_LOW_CHILD_COMPLIANCE': 'Flag_Low_Child_Compliance',
+                'bio_ADULT_SPIKE': 'Flag_Catch_Up_Spike',
+                'enrol_saturation_index': 'Enrolment_Health_Index', 
+                'demo_persistent_friction_score': 'Demographic_Stability_Index',
+                'bio_Bio_Stress_Index': 'Biometric_Compliance_Index', 
+                'Friction_Intensity_Score': 'ALHS_Score' 
+            }
+            
+            existing_cols = [c for c in column_mapping.keys() if c in df.columns]
+            df = df[existing_cols].rename(columns=column_mapping)
+            df.fillna(0, inplace=True)
+            
+            flag_cols = ['Flag_Future_Surge_Risk', 'Flag_Infra_Stress', 'Flag_Low_Child_Compliance', 'Flag_Catch_Up_Spike']
+            for col in flag_cols:
+                if col in df.columns:
+                    df[col] = df[col].astype(str).map({'True': 1, 'False': 0, '1': 1, '0': 0, '1.0': 1, '0.0': 0}).fillna(0).astype(int)
+
+            def normalize(series):
+                if series.max() == series.min(): return 0
+                return (series - series.min()) / (series.max() - series.min())
+
+            if 'ALHS_Score' in df.columns: df['ALHS_Score'] = normalize(df['ALHS_Score'])
+            if 'Enrolment_Health_Index' in df.columns: df['Enrolment_Health_Index'] = normalize(df['Enrolment_Health_Index'])
+            
+            if 'Demographic_Stability_Index' in df.columns: df['Demographic_Stability_Index'] = 1 - normalize(df['Demographic_Stability_Index'])
+            if 'Biometric_Compliance_Index' in df.columns: df['Biometric_Compliance_Index'] = 1 - normalize(df['Biometric_Compliance_Index'])
+            
+            return df
         except Exception as e:
-            st.session_state['last_api_error'] = str(e)
-            return None
+            st.error(f"Data processing error: {e}")
+            return pd.DataFrame()
 
     @staticmethod
-    @st.cache_data(ttl=600)
+    def get_summary(state="All India"):
+        df = APIClient.load_local_data()
+        if df.empty: return None
+        
+        if state != "All India": 
+            df = df[df['State'] == state]
+        
+        high_risk = df[df['ALHS_Score'] > 0.7].shape[0]
+        moderate_risk = df[(df['ALHS_Score'] > 0.4) & (df['ALHS_Score'] <= 0.7)].shape[0]
+        
+        return {
+            "critical_districts": int(high_risk),
+            "avg_compliance": round(float(df['Biometric_Compliance_Index'].mean()), 4),
+            "pending_updates": int(df['Pending_Biometrics'].sum()),
+            "system_health": round(float(1 - df['ALHS_Score'].mean()), 3),
+            "high_risk_districts": int(high_risk),
+            "moderate_risk_districts": int(moderate_risk),
+            "total_districts": int(len(df))
+        }
+
+    @staticmethod
     def get_data(state="All India"):
-        try:
-            response = requests.get(f"{API_URL}/api/dataset", params={"state": state}, timeout=10)
-            if response.status_code == 200:
-                st.session_state['last_api_error'] = None
-                data = response.json()
-                return pd.DataFrame(data)
-            else:
-                err = f"Data API error: HTTP {response.status_code}"
-                st.session_state['last_api_error'] = err
-                return pd.DataFrame()
-        except Exception as e:
-            st.session_state['last_api_error'] = str(e)
-            return pd.DataFrame()
+        df = APIClient.load_local_data()
+        if df.empty: return pd.DataFrame()
+        if state != "All India": 
+            df = df[df['State'] == state]
+        return df
 
 
 # COMPONENT LIBRARY
@@ -807,39 +834,7 @@ def page_executive(df, metrics):
 
     with g2:
         # Fetch intervention data to show priority breakdown
-        try:
-            r = requests.get(f"{API_URL}/api/interventions", timeout=5)
-            if r.status_code == 200:
-                idf = pd.DataFrame(r.json())
-                # Filter for selected states
-                idf_filtered = idf[idf['State'].isin([s1, s2])]
-                
-                if not idf_filtered.empty:
-                    # Group by State and Priority
-                    prio_counts = idf_filtered.groupby(['State', 'Intervention_Priority']).size().reset_index(name='Count')
-                    
-                    fig_bar = px.bar(
-                        prio_counts,
-                        x='State',
-                        y='Count',
-                        color='Intervention_Priority',
-                        barmode='group',
-                        title="Intervention Priorities",
-                        color_discrete_map={'High': '#dc2626', 'Medium': '#f59e0b', 'Low': '#16a34a'}
-                    )
-                    fig_bar.update_layout(
-                        height=380, 
-                        plot_bgcolor="rgba(0,0,0,0)", 
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#0f172a")
-                    )
-                    st.plotly_chart(fig_bar, use_container_width=True)
-                else:
-                    st.info("No intervention data available for selected states.")
-            else:
-                st.warning("Could not fetch intervention data.")
-        except Exception:
-            st.warning("Intervention API unavailable.")
+        st.info("Intervention data unavailable in offline mode.")
 
 def page_tableau_integration():
     st.markdown('<p class="section-header">🗺️ Tableau Public Dashboards</p>', unsafe_allow_html=True)
@@ -1042,11 +1037,7 @@ def page_district_deep_dive(df):
         </div>
         """, unsafe_allow_html=True)
             # Fetch intervention metrics for this district (if available)
-        try:
-                r_im = requests.get(f"{API_URL}/api/interventions", timeout=5)
-                im_df = pd.DataFrame(r_im.json()) if r_im.status_code == 200 else pd.DataFrame()
-        except Exception:
-                im_df = pd.DataFrame()
+        im_df = pd.DataFrame()
 
         im_record = None
         if not im_df.empty:
