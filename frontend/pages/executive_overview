@@ -95,6 +95,7 @@ except Exception:
 import pandas as pd
 import os
 from dotenv import load_dotenv
+import plotly.express as px
 
 load_dotenv()
 
