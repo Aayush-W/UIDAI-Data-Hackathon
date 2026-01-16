@@ -1,13 +1,11 @@
 import os
 import streamlit as st
-import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 from datetime import datetime
-from dotenv import load_dotenv
 # Page Config
 st.set_page_config(
     page_title="Aadhaar Lifecycle Risk Dashboard",
@@ -15,9 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load env and set API URL
-load_dotenv()
-API_URL = os.getenv('API_BASE_URL', 'http://localhost:8000')
 # Page config
 st.set_page_config(
     page_title="UIDAI Risk Intelligence",
@@ -402,63 +397,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-def debug_panel():
-    """Display debug info and quick endpoint pings."""
-    st.sidebar.markdown("---")
-    st.sidebar.header("🔧 Debug Panel")
-    st.sidebar.caption(f"API: {API_URL}")
-
-    if st.sidebar.button("🔍 Ping API Root"):
-        try:
-            r = requests.get(f"{API_URL}/", timeout=3)
-            st.sidebar.success(f"✅ Status: {r.status_code}")
-            st.sidebar.json(r.json())
-        except Exception as e:
-            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
-
-    if st.sidebar.button("📊 Ping Summary"):
-        try:
-            r = requests.get(f"{API_URL}/api/summary", timeout=5)
-            st.sidebar.success(f"✅ Status: {r.status_code}")
-            if r.status_code == 200:
-                st.sidebar.json(r.json())
-        except Exception as e:
-            st.sidebar.error(f"❌ Failed: {str(e)[:100]}")
-
-
-# API CLIENT
-class APIClient:
-    @staticmethod
-    def get_summary(state="All India"):
-        try:
-            response = requests.get(f"{API_URL}/api/summary", params={"state": state}, timeout=5)
-            if response.status_code == 200:
-                st.session_state['last_api_error'] = None
-                return response.json()
-            else:
-                err = f"Summary API error: HTTP {response.status_code}"
-                st.session_state['last_api_error'] = err
-                return None
-        except Exception as e:
-            st.session_state['last_api_error'] = str(e)
-            return None
-
-    @staticmethod
-    @st.cache_data(ttl=600)
-    def get_data(state="All India"):
-        try:
-            response = requests.get(f"{API_URL}/api/dataset", params={"state": state}, timeout=10)
-            if response.status_code == 200:
-                st.session_state['last_api_error'] = None
-                data = response.json()
-                return pd.DataFrame(data)
-            else:
-                err = f"Data API error: HTTP {response.status_code}"
-                st.session_state['last_api_error'] = err
-                return pd.DataFrame()
-        except Exception as e:
-            st.session_state['last_api_error'] = str(e)
-            return pd.DataFrame()
+@st.cache_data
+def load_data():
+    return pd.read_excel("datasets/Final_All_Metrics_Data.xlsx")
 
 
 # COMPONENT LIBRARY
@@ -807,39 +748,7 @@ def page_executive(df, metrics):
 
     with g2:
         # Fetch intervention data to show priority breakdown
-        try:
-            r = requests.get(f"{API_URL}/api/interventions", timeout=5)
-            if r.status_code == 200:
-                idf = pd.DataFrame(r.json())
-                # Filter for selected states
-                idf_filtered = idf[idf['State'].isin([s1, s2])]
-                
-                if not idf_filtered.empty:
-                    # Group by State and Priority
-                    prio_counts = idf_filtered.groupby(['State', 'Intervention_Priority']).size().reset_index(name='Count')
-                    
-                    fig_bar = px.bar(
-                        prio_counts,
-                        x='State',
-                        y='Count',
-                        color='Intervention_Priority',
-                        barmode='group',
-                        title="Intervention Priorities",
-                        color_discrete_map={'High': '#dc2626', 'Medium': '#f59e0b', 'Low': '#16a34a'}
-                    )
-                    fig_bar.update_layout(
-                        height=380, 
-                        plot_bgcolor="rgba(0,0,0,0)", 
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        font=dict(color="#0f172a")
-                    )
-                    st.plotly_chart(fig_bar, use_container_width=True)
-                else:
-                    st.info("No intervention data available for selected states.")
-            else:
-                st.warning("Could not fetch intervention data.")
-        except Exception:
-            st.warning("Intervention API unavailable.")
+        st.info("Intervention data is derived within the dashboard for hackathon deployment.")
 
 def page_tableau_integration():
     st.markdown('<p class="section-header">🗺️ Tableau Public Dashboards</p>', unsafe_allow_html=True)
@@ -1042,11 +951,7 @@ def page_district_deep_dive(df):
         </div>
         """, unsafe_allow_html=True)
             # Fetch intervention metrics for this district (if available)
-        try:
-                r_im = requests.get(f"{API_URL}/api/interventions", timeout=5)
-                im_df = pd.DataFrame(r_im.json()) if r_im.status_code == 200 else pd.DataFrame()
-        except Exception:
-                im_df = pd.DataFrame()
+        im_df = pd.DataFrame()  # Disable backend dependency
 
         im_record = None
         if not im_df.empty:
@@ -1288,7 +1193,7 @@ def main():
         
         st.markdown("### 🌍 Global Filters")
         
-        full_df = APIClient.get_data("All India")
+        full_df = load_data()
         if not full_df.empty:
             state_list = ["All India"] + list(sorted(full_df['State'].unique()))
             selected_state = st.selectbox("🗺️ Select State:", state_list)
@@ -1306,17 +1211,25 @@ def main():
                 st.cache_data.clear()
                 st.rerun()
         with col_b:
-            show_debug = st.checkbox("🔧 Debug", value=False)
-        
-        if show_debug:
-            debug_panel()
+            pass
 
     # Main Content
     render_header()
 
     # Fetch Data once and reuse
-    df = APIClient.get_data(selected_state)
-    metrics = APIClient.get_summary(selected_state)
+    df = load_data()
+
+    if selected_state != "All India":
+        df = df[df["State"] == selected_state]
+
+    metrics = {
+        "critical_districts": (df["ALHS_Score"] > 0.7).sum(),
+        "high_risk_districts": (df["ALHS_Score"] > 0.4).sum(),
+        "avg_compliance": df["Biometric_Compliance_Index"].mean(),
+        "system_health": 1 - df["ALHS_Score"].mean(),
+        "pending_updates": df["Pending_Biometrics"].sum(),
+        "total_districts": df["District"].nunique()
+    }
 
     if selected_page == "🏠 Executive Dashboard":
         page_executive(df, metrics)
