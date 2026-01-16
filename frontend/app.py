@@ -6,13 +6,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 from datetime import datetime
-# Page Config
-st.set_page_config(
-    page_title="Aadhaar Lifecycle Risk Dashboard",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 # Page config
 st.set_page_config(
     page_title="UIDAI Risk Intelligence",
@@ -399,8 +392,34 @@ st.markdown("""
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("datasets/UIDAI_Dashboard_Dataset.csv")
-data = load_data()
+    # Robustly find the dataset file relative to this script
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    paths_to_check = [
+        os.path.join(base_dir, "datasets", "UIDAI_Dashboard_Dataset.csv"),      # frontend/datasets
+        os.path.join(base_dir, "..", "datasets", "UIDAI_Dashboard_Dataset.csv"), # root/datasets
+        os.path.join(base_dir, "..", "backend", "UIDAI_Dashboard_Dataset.csv")   # root/backend
+    ]
+    
+    for path in paths_to_check:
+        if os.path.exists(path):
+            try:
+                df = pd.read_csv(path)
+                # Ensure required columns exist to prevent KeyErrors
+                required_columns = [
+                    'State', 'District', 'ALHS_Score', 'Pending_Biometrics', 
+                    'Enrolment_Health_Index', 'Biometric_Compliance_Index', 
+                    'Demographic_Stability_Index', 'Total_Enrolment'
+                ]
+                for col in required_columns:
+                    if col not in df.columns:
+                        df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
+                return df
+            except Exception as e:
+                st.error(f"Error reading dataset: {e}")
+                st.stop()
+            
+    st.error("Dataset file not found. Please ensure 'UIDAI_Dashboard_Dataset.csv' exists in 'datasets' or 'backend' folder.")
+    st.stop()
 # COMPONENT LIBRARY
 def render_header():
     st.markdown("""
@@ -459,7 +478,9 @@ def render_kpis(metrics):
         )
     
     with col2:
-        compliance = metrics.get('avg_compliance', 0) * 100
+        compliance = metrics.get('avg_compliance', 0)
+        if pd.isna(compliance): compliance = 0
+        compliance = compliance * 100
         st.metric(
             label="📊 Avg BCI (Bio Coverage)",
             value=f"{compliance:.1f}%",
@@ -470,6 +491,7 @@ def render_kpis(metrics):
     
     with col3:
         health = metrics.get('system_health', 0)
+        if pd.isna(health): health = 0
         st.metric(
             label="🛡️ ALHS (Lifecycle Health)",
             value=f"{health:.2f}",
@@ -953,6 +975,7 @@ def page_district_deep_dive(df):
         im_df = pd.DataFrame()  # Disable backend dependency
 
         im_record = None
+        matches = pd.DataFrame()
         if not im_df.empty:
                 matches = im_df[im_df['District'].str.lower() == selected_dist.lower()]
         if not matches.empty:
