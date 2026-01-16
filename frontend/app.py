@@ -393,7 +393,7 @@ st.markdown("""
 def load_data():
     # Robustly find the dataset file relative to this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
-        
+    
     # Define all possible filenames and directories
     filenames = [
         "UIDAI_Final_Dashboard_Dataset.csv",
@@ -410,43 +410,15 @@ def load_data():
         os.path.join(os.path.dirname(base_dir), "backend"),
     ]
     
-    paths_to_check = [os.path.join(d, f) for d in directories for f in filenames]
-    
-    for path in paths_to_check:
-        if os.path.exists(path):
-            try:
-                df = pd.read_csv(path)
-                # Ensure required columns exist to prevent KeyErrors
-                required_columns = [
-                    'State', 'District', 'ALHS_Score', 'Pending_Biometrics', 
-                    'Enrolment_Health_Index', 'Biometric_Compliance_Index', 
-                    'Demographic_Stability_Index', 'Total_Enrolment'
-                ]
-                for col in required_columns:
-                    if col not in df.columns:
-                        df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
-                
-                # Fill NaNs for numeric columns to ensure stability
-                numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
-                              'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
-                for col in numeric_cols:
-                    if col in df.columns:
-                        df[col] = df[col].fillna(0)
-                        
-                return df
-            except Exception as e:
-                st.error(f"Error reading dataset: {e}")
-                st.stop()
-            
-    st.error("Dataset file not found. Please ensure 'UIDAI_Final_Dashboard_Dataset.csv' (or 'UIDAI_FInal_Dashboard_Dataset.csv') exists in 'datasets' or 'backend' folder.")
-    st.stop()
+    # Iterate through all combinations
     for d in directories:
         for f in filenames:
             path = os.path.join(d, f)
             if os.path.exists(path):
                 try:
                     df = pd.read_csv(path)
-                    # Ensure required columns exist
+                    
+                    # 1. Ensure required columns exist
                     required_columns = [
                         'State', 'District', 'ALHS_Score', 'Pending_Biometrics', 
                         'Enrolment_Health_Index', 'Biometric_Compliance_Index', 
@@ -456,17 +428,19 @@ def load_data():
                         if col not in df.columns:
                             df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
                     
-                    # Fill NaNs
+                    # 2. Fill NaNs for numeric columns to ensure stability
                     numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
                                   'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
                     for col in numeric_cols:
                         if col in df.columns:
                             df[col] = df[col].fillna(0)
+                            
                     return df
                 except Exception:
                     continue
     
     return None
+
 # COMPONENT LIBRARY
 def render_header():
     st.markdown("""
@@ -1256,25 +1230,6 @@ def main():
     
     # Load Data with Fallback
     full_df = load_data()
-    
-    if full_df is None:
-        st.warning("⚠️ Dataset not found automatically.")
-        uploaded_file = st.file_uploader("Upload Dataset (CSV)", type="csv")
-        if uploaded_file:
-            try:
-                full_df = pd.read_csv(uploaded_file)
-                # Basic cleaning for uploaded file
-                numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
-                              'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
-                for col in numeric_cols:
-                    if col in full_df.columns:
-                        full_df[col] = full_df[col].fillna(0)
-            except Exception as e:
-                st.error(f"Error reading file: {e}")
-                st.stop()
-        else:
-            st.info("Please upload 'UIDAI_Final_Dashboard_Dataset.csv' to proceed.")
-            st.stop()
     
     if full_df is None:
         st.warning("⚠️ Dataset not found automatically.")
