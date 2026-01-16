@@ -393,54 +393,43 @@ st.markdown("""
 def load_data():
     # Robustly find the dataset file relative to this script
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Define all possible filenames and directories
-    filenames = [
-        "UIDAI_Final_Dashboard_Dataset.csv",
-        "UIDAI_FInal_Dashboard_Dataset.csv",
-        "UIDAI_Dashboard_Dataset.csv"
+    paths_to_check = [
+        os.path.join(base_dir, "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "datasets", "UIDAI_FInal_Dashboard_Dataset.csv"),      # Handle typo
+        os.path.join(base_dir, "..", "datasets", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "datasets", "UIDAI_FInal_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "backend", "UIDAI_Final_Dashboard_Dataset.csv"),
+        os.path.join(base_dir, "..", "backend", "UIDAI_FInal_Dashboard_Dataset.csv")
     ]
     
-    directories = [
-        base_dir,
-        os.path.join(base_dir, "datasets"),
-        os.path.join(base_dir, "backend"),
-        os.path.dirname(base_dir),
-        os.path.join(os.path.dirname(base_dir), "datasets"),
-        os.path.join(os.path.dirname(base_dir), "backend"),
-    ]
-    
-    # Iterate through all combinations
-    for d in directories:
-        for f in filenames:
-            path = os.path.join(d, f)
-            if os.path.exists(path):
-                try:
-                    df = pd.read_csv(path)
-                    
-                    # 1. Ensure required columns exist
-                    required_columns = [
-                        'State', 'District', 'ALHS_Score', 'Pending_Biometrics', 
-                        'Enrolment_Health_Index', 'Biometric_Compliance_Index', 
-                        'Demographic_Stability_Index', 'Total_Enrolment'
-                    ]
-                    for col in required_columns:
-                        if col not in df.columns:
-                            df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
-                    
-                    # 2. Fill NaNs for numeric columns to ensure stability
-                    numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
-                                  'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
-                    for col in numeric_cols:
-                        if col in df.columns:
-                            df[col] = df[col].fillna(0)
-                            
-                    return df
-                except Exception:
-                    continue
-    
-    return None
-
+    for path in paths_to_check:
+        if os.path.exists(path):
+            try:
+                df = pd.read_csv(path)
+                # Ensure required columns exist to prevent KeyErrors
+                required_columns = [
+                    'State', 'District', 'ALHS_Score', 'Pending_Biometrics', 
+                    'Enrolment_Health_Index', 'Biometric_Compliance_Index', 
+                    'Demographic_Stability_Index', 'Total_Enrolment'
+                ]
+                for col in required_columns:
+                    if col not in df.columns:
+                        df[col] = 0 if col not in ['State', 'District'] else 'Unknown'
+                
+                # Fill NaNs for numeric columns to ensure stability
+                numeric_cols = ['ALHS_Score', 'Pending_Biometrics', 'Enrolment_Health_Index', 
+                              'Biometric_Compliance_Index', 'Demographic_Stability_Index', 'Total_Enrolment']
+                for col in numeric_cols:
+                    if col in df.columns:
+                        df[col] = df[col].fillna(0)
+                        
+                return df
+            except Exception as e:
+                st.error(f"Error reading dataset: {e}")
+                st.stop()
+            
+    st.error("Dataset file not found. Please ensure 'UIDAI_Final_Dashboard_Dataset.csv' (or 'UIDAI_FInal_Dashboard_Dataset.csv') exists in 'datasets' or 'backend' folder.")
+    st.stop()
 # COMPONENT LIBRARY
 def render_header():
     st.markdown("""
@@ -1224,7 +1213,6 @@ def main():
     if 'last_api_error' not in st.session_state:
         st.session_state['last_api_error'] = None
         
-           
     # Render Header FIRST to ensure content visibility
     render_header()
     
