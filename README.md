@@ -24,7 +24,7 @@ The result is an **Early-Warning Risk & Intervention Dashboard** that enables UI
 
 ---
 
- 🎯 Core Problem Addressed
+ 🎯 Core Problem 
 
 Current UIDAI monitoring practices analyse enrolment, demographic updates, and biometric updates **in silos**.  
 This fragmented view prevents early detection of:
