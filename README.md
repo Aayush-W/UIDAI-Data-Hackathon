@@ -96,7 +96,7 @@ The analytical pipeline produces **district-level, decision-ready outputs** suit
 - Early-warning watchlists  
 - Intervention prioritisation dashboards  
 
-The system is **auditable, reproducible, and scalable**.
+The system is **auditable, reproducible, and scalable**!
 
 ---
 
